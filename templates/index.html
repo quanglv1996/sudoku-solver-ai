@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver AI - High Tech</title>
+    <link rel="stylesheet" href="{{ url_for('send_static', path='css/style.css') }}">
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <span class="title-icon">🧩</span>
+                    Sudoku Solver AI
+                    <span class="title-subtext">Powered by Computer Vision</span>
+                </h1>
+                <p class="subtitle">Upload a sudoku image, let AI solve it instantly</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">📸</div>
+                    <h3>Upload Sudoku Image</h3>
+                    <p>Drag and drop or click to select</p>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+                <button class="btn btn-primary" id="solveBtn" disabled>
+                    <span class="btn-icon">⚡</span>
+                    Solve Sudoku
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-container">
+                    <!-- Original Image -->
+                    <div class="image-wrapper">
+                        <div class="image-label">
+                            <span class="label-text">Original Image</span>
+                            <span class="label-badge">Input</span>
+                        </div>
+                        <img id="originalImage" alt="Original Sudoku" class="result-image">
+                    </div>
+
+                    <!-- Solved Image -->
+                    <div class="image-wrapper">
+                        <div class="image-label">
+                            <span class="label-text">Solved Sudoku</span>
+                            <span class="label-badge success">✓ Solved</span>
+                        </div>
+                        <img id="solvedImage" alt="Solved Sudoku" class="result-image">
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <p class="stat-label">Difficulty</p>
+                            <p class="stat-value" id="difficultyValue">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <p class="stat-label">Status</p>
+                            <p class="stat-value" id="statusValue">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-content">
+                            <p class="stat-label">Steps</p>
+                            <p class="stat-value" id="stepsValue">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid Display -->
+                <div class="grid-display">
+                    <div class="grid-wrapper">
+                        <div class="grid-label">Detected Grid</div>
+                        <div class="sudoku-grid" id="detectedGridDisplay"></div>
+                    </div>
+                    <div class="grid-wrapper">
+                        <div class="grid-label">Solved Grid</div>
+                        <div class="sudoku-grid" id="solvedGridDisplay"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-container" id="loadingContainer" style="display: none;">
+                <div class="spinner"></div>
+                <p class="loading-text">Solving your sudoku...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Status Message -->
+            <div class="message-container" id="messageContainer" style="display: none;">
+                <div class="message" id="messageBox"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Sudoku Solver AI • Powered by YOLO Detection & EasyOCR • 2026</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('send_static', path='js/main.js') }}"></script>
+</body>
+</html>

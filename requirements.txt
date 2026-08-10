@@ -1,0 +1,20 @@
+# requirements.txt - Dependencies for Sudoku Solver Web Application
+
+# Flask and Web
+Flask==2.3.0
+Flask-CORS==4.0.0
+Werkzeug==2.3.0
+
+# Computer Vision
+opencv-python==4.8.0.76
+numpy==1.24.0
+
+# Deep Learning
+torch==2.0.0
+ultralytics==8.0.0  # YOLO for point detection
+
+# OCR
+easyocr==1.7.2
+
+# Utilities
+python-dotenv==1.0.0

@@ -1,0 +1,187 @@
+2026-08-03 15:18:06,047 - __main__ - ERROR - Model not found: D:\Projects-Persional\sudoku-solver-ai\src\weightsest.pt
+2026-08-03 15:18:32,867 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:18:35,296 - __main__ - INFO - Pipeline ready
+2026-08-03 15:18:35,297 - __main__ - INFO - Found 6 images
+2026-08-03 15:18:35,299 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:18:35,808 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,809 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:18:35,871 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,871 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:18:35,897 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,898 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:18:35,926 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,927 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:18:35,955 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,955 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:18:35,976 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:18:35,976 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:19:13,669 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:19:16,073 - __main__ - INFO - Pipeline ready
+2026-08-03 15:19:16,073 - __main__ - INFO - Found 6 images
+2026-08-03 15:19:16,073 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:19:16,619 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,619 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:19:16,671 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,671 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:19:16,697 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,698 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:19:16,726 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,727 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:19:16,759 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,759 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:19:16,788 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:19:16,789 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:20:37,497 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:20:39,951 - __main__ - INFO - Pipeline ready
+2026-08-03 15:20:39,952 - __main__ - INFO - Found 6 images
+2026-08-03 15:20:39,952 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:20:40,483 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,483 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:20:40,548 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,549 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:20:40,576 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,576 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:20:40,604 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,604 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:20:40,635 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,635 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:20:40,660 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:20:40,660 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:21:40,449 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:21:42,836 - __main__ - INFO - Pipeline ready
+2026-08-03 15:21:42,836 - __main__ - INFO - Found 6 images
+2026-08-03 15:21:42,836 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:21:43,350 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,351 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:21:43,401 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,402 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:21:43,433 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,434 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:21:43,465 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,465 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:21:43,495 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,495 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:21:43,515 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:21:43,515 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:22:16,762 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:22:19,209 - __main__ - INFO - Pipeline ready
+2026-08-03 15:22:19,210 - __main__ - INFO - Found 6 images
+2026-08-03 15:22:19,210 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:22:19,752 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 2
+2026-08-03 15:22:19,752 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:22:19,801 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 2
+2026-08-03 15:22:19,802 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:22:19,827 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:22:19,828 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:22:19,864 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 1
+2026-08-03 15:22:19,864 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:22:19,915 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 1
+2026-08-03 15:22:19,915 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:22:19,935 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:22:19,935 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:23:35,876 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:23:38,391 - __main__ - INFO - Pipeline ready
+2026-08-03 15:23:38,421 - __main__ - INFO - Found 6 images
+2026-08-03 15:23:38,422 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:23:38,959 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 2
+2026-08-03 15:23:38,960 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:23:39,026 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 2
+2026-08-03 15:23:39,027 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:23:39,054 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:23:39,055 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:23:39,089 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 1
+2026-08-03 15:23:39,090 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:23:39,121 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 1
+2026-08-03 15:23:39,122 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:23:39,147 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:23:39,147 - __main__ - INFO - Processed 0/6 images successfully
+2026-08-03 15:24:13,844 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:24:16,223 - __main__ - INFO - Pipeline ready
+2026-08-03 15:24:16,224 - __main__ - INFO - Found 6 images
+2026-08-03 15:24:16,224 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:24:16,726 - __main__ - ERROR - Pipeline failed: Expected exactly 4 corners, detected 6
+2026-08-03 15:24:16,726 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:24:18,376 - __main__ - INFO - Input Grid:
+[[0 3 0 0 0 0 5 0 0]
+ [0 2 0 0 0 0 0 6 9]
+ [5 0 0 0 0 0 0 0 0]
+ [0 0 0 9 0 0 0 0 0]
+ [8 9 0 2 6 3 7 0 5]
+ [0 0 0 0 0 0 0 0 0]
+ [0 0 3 0 0 0 0 2 0]
+ [0 0 0 0 0 6 0 8 3]
+ [0 0 9 0 3 0 0 5 0]]
+2026-08-03 15:24:18,377 - __main__ - INFO - Solution:
+[[9 3 1 6 2 4 5 7 8]
+ [4 2 7 1 5 8 3 6 9]
+ [5 6 8 3 7 9 1 4 2]
+ [1 5 2 9 4 7 8 3 6]
+ [8 9 4 2 6 3 7 1 5]
+ [3 7 6 5 8 1 2 9 4]
+ [6 1 3 8 9 5 4 2 7]
+ [2 4 5 7 1 6 9 8 3]
+ [7 8 9 4 3 2 6 5 1]]
+2026-08-03 15:24:18,380 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:24:18,404 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:24:18,405 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:24:18,871 - __main__ - INFO - Input Grid:
+[[0 0 5 0 0 7 6 3 0]
+ [6 0 9 0 4 0 0 0 0]
+ [2 0 0 0 0 8 0 9 5]
+ [0 0 4 0 0 0 0 0 0]
+ [0 2 8 0 0 0 9 0 0]
+ [0 0 0 0 0 0 7 0 8]
+ [7 6 0 8 3 0 0 0 9]
+ [0 0 0 0 9 0 3 0 6]
+ [0 4 3 7 0 0 8 0 0]]
+2026-08-03 15:24:18,871 - __main__ - INFO - Solution:
+[[4 8 5 9 1 7 6 3 2]
+ [6 3 9 2 4 5 1 8 7]
+ [2 1 7 3 6 8 4 9 5]
+ [1 7 4 5 8 9 2 6 3]
+ [3 2 8 6 7 1 9 5 4]
+ [5 9 6 4 2 3 7 1 8]
+ [7 6 1 8 3 2 5 4 9]
+ [8 5 2 1 9 4 3 7 6]
+ [9 4 3 7 5 6 8 2 1]]
+2026-08-03 15:24:18,873 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:24:19,476 - __main__ - INFO - Input Grid:
+[[0 0 6 0 0 9 0 0 0]
+ [0 2 0 0 0 8 0 6 0]
+ [0 4 3 0 0 0 0 0 0]
+ [9 0 0 0 7 0 0 0 0]
+ [0 8 0 0 0 0 0 0 0]
+ [0 0 0 2 0 0 3 4 0]
+ [0 0 0 0 9 0 0 0 7]
+ [6 0 0 0 0 0 0 0 0]
+ [0 9 0 0 4 0 8 0 0]]
+2026-08-03 15:24:19,476 - __main__ - INFO - Solution:
+[[1 5 6 3 2 9 4 7 8]
+ [7 2 9 4 1 8 5 6 3]
+ [8 4 3 5 6 7 1 9 2]
+ [9 1 4 6 7 3 2 8 5]
+ [3 8 2 9 5 4 7 1 6]
+ [5 6 7 2 8 1 3 4 9]
+ [4 3 1 8 9 2 6 5 7]
+ [6 7 8 1 3 5 9 2 4]
+ [2 9 5 7 4 6 8 3 1]]
+2026-08-03 15:24:19,476 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:24:19,502 - __main__ - ERROR - Pipeline failed: No objects detected in image
+2026-08-03 15:24:19,502 - __main__ - INFO - Processed 3/6 images successfully
+2026-08-03 15:24:19,502 - __main__ - INFO - Done!
+2026-08-03 15:25:05,153 - __main__ - INFO - Initializing pipeline...
+2026-08-03 15:25:07,531 - __main__ - INFO - Pipeline ready
+2026-08-03 15:25:07,532 - __main__ - INFO - Found 6 images
+2026-08-03 15:25:07,534 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.jpg
+2026-08-03 15:25:08,020 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:25:08,020 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\2.jpg
+2026-08-03 15:25:08,066 - __main__ - ERROR - Pipeline failed: 'numpy.ndarray' object has no attribute 'points'
+2026-08-03 15:25:08,066 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\3.jpg
+2026-08-03 15:25:08,090 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:25:08,091 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\4.jpg
+2026-08-03 15:25:08,119 - __main__ - ERROR - Pipeline failed: 'numpy.ndarray' object has no attribute 'points'
+2026-08-03 15:25:08,119 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\5.jpg
+2026-08-03 15:25:08,149 - __main__ - ERROR - Pipeline failed: 'numpy.ndarray' object has no attribute 'points'
+2026-08-03 15:25:08,149 - __main__ - INFO - Processing: D:\Projects-Persional\sudoku-solver-ai\input\1.png
+2026-08-03 15:25:08,170 - __main__ - ERROR - Pipeline failed: Point detection failed
+2026-08-03 15:25:08,170 - __main__ - INFO - Processed 0/6 images successfully
