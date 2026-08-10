@@ -68,13 +68,14 @@ def init_pipeline():
         
         # Check if model file exists
         if not point_model.exists():
-            logger.error(f"Model file not found at: {point_model}")
+            logger.error(f"❌ Model file not found at: {point_model}")
             logger.error("Please download the YOLO model and place it at: backend/weights/best.pt")
             pipeline_loaded = True
             return None
         
-        logger.info(f"Loading model from: {point_model}")
-        logger.info("Initializing pipeline (this may take a minute on first run)...")
+        logger.info(f"📍 Loading model from: {point_model}")
+        logger.info("⏳ Initializing pipeline (this may take a minute on first run)...")
+        logger.info("   - Loading YOLO point detection model...")
         
         pipeline = SudokuSolverPipeline(
             point_detection_model=str(point_model),
@@ -83,12 +84,15 @@ def init_pipeline():
             use_easyocr=True,
             conf_threshold=0.3
         )
-        pipeline.set_verbose(False)
-        logger.info("✓ Pipeline initialized successfully!")
+        pipeline.set_verbose(True)
+        logger.info("✅ Pipeline initialized successfully!")
         pipeline_loaded = True
         return pipeline
     except Exception as e:
-        logger.error(f"Failed to initialize pipeline: {e}", exc_info=True)
+        logger.error(f"❌ Failed to initialize pipeline!")
+        logger.error(f"   Error type: {type(e).__name__}")
+        logger.error(f"   Error message: {str(e)}")
+        logger.error(f"   Full traceback:", exc_info=True)
         pipeline_loaded = True
         return None
 
@@ -244,12 +248,15 @@ def solve_sudoku():
         # Get/initialize pipeline on first use
         proc_pipeline = get_pipeline()
         if proc_pipeline is None:
+            logger.error("❌ Pipeline initialization failed!")
+            logger.error("Check the error messages above for details")
             return jsonify({
                 'success': False,
                 'message': 'Pipeline not initialized. Check server logs for details.',
                 'original_image': f'data:image/jpeg;base64,{original_image_base64}'
             }), 500
         
+        logger.info("🔍 Running sudoku solver pipeline...")
         result = proc_pipeline.run(image)
         
         if not result.get('success'):
