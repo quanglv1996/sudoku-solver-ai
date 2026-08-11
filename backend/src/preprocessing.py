@@ -27,21 +27,24 @@ class Preprocessing:
     Trả về: ma trận 9x9 ô ảnh
     """
     
-    def __init__(self, cell_size: int = 64, grid_size: int = 9):
+    def __init__(self, cell_size: int = 64, grid_size: int = 9, margin: int = 4):
         """
         Khởi tạo Preprocessing
         
         Args:
             cell_size: Kích thước mỗi ô (mặc định 64x64)
             grid_size: Kích thước lưới (9x9 cho sudoku)
+            margin: Margin bên trong cell để tránh viền (pixel)
         """
         self.cell_size = cell_size
         self.grid_size = grid_size
+        self.margin = margin  # 🔍 Margin để tránh viền
         self.output_size = (cell_size * grid_size, cell_size * grid_size)
     
     def crop(self, aligned_image: np.ndarray) -> PreprocessingResult:
         """
         Cắt ảnh căn chỉnh thành 81 ô (9x9)
+        Cắt sâu vào bên trong để tránh viền bo
         
         Args:
             aligned_image: Ảnh đã căn chỉnh (576x576 hoặc cell_size*9)
@@ -69,13 +72,19 @@ class Preprocessing:
         # Cắt thành 9x9 ô
         for row in range(self.grid_size):
             for col in range(self.grid_size):
-                y1 = row * self.cell_size
-                y2 = y1 + self.cell_size
-                x1 = col * self.cell_size
-                x2 = x1 + self.cell_size
+                # Tính toán vị trí với margin để tránh viền
+                y1 = row * self.cell_size + self.margin
+                y2 = y1 + self.cell_size - 2 * self.margin
+                x1 = col * self.cell_size + self.margin
+                x2 = x1 + self.cell_size - 2 * self.margin
                 
+                # Cắt ô bên trong, tránh viền
                 cell = aligned_image[y1:y2, x1:x2]
-                cells.append(cell)
+                
+                # Resize lại về kích thước đầy đủ (64x64)
+                cell_resized = cv2.resize(cell, (self.cell_size, self.cell_size))
+                
+                cells.append(cell_resized)
         
         return PreprocessingResult(
             aligned_image=aligned_image,

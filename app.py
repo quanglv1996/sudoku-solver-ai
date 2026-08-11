@@ -82,7 +82,9 @@ def init_pipeline():
             cell_size=64,
             device="cpu",  # Sử dụng CPU để tương thích tốt hơn
             use_easyocr=True,
-            conf_threshold=0.3
+            conf_threshold=0.15,  # 🔍 Giảm threshold để nhận diện được 4, 1, 7
+            save_debug=True,  # Bật lưu ảnh debug
+            debug_dir="debug_output"
         )
         pipeline.set_verbose(True)
         logger.info("✅ Pipeline initialized successfully!")
@@ -115,42 +117,114 @@ def load_image_from_file(file):
     
     return image
 
-def draw_solved_grid(image, solved_grid):
+def draw_solved_grid(image, solved_grid, detected_grid=None, transform_matrix=None):
     """
-    Vẽ các chữ số giải được lên ảnh
-    Chỉ vẽ những chữ số mới được giải (detect = 0)
+    Vẽ các chữ số giải được lên ảnh gốc
+    Chỉ vẽ những chữ số mới được giải (detected = 0, solved > 0)
+    
+    Args:
+        image: Ảnh gốc
+        solved_grid: Ma trận sudoku đã giải (9x9)
+        detected_grid: Ma trận sudoku detect được (9x9), optional
+        transform_matrix: Perspective transform matrix (3x3) từ ảnh gốc -> align
     """
     image_copy = image.copy()
-    
-    # Cải thiện hình ảnh để dễ nhìn
     h, w = image_copy.shape[:2]
-    cell_size = h // 9
+    
+    # Nếu không có detected_grid, vẽ tất cả chữ số
+    if detected_grid is None:
+        detected_grid = np.zeros_like(solved_grid)
+    
+    # Kích thước ảnh align (576x576)
+    aligned_size = 576
+    
+    # Kiểm tra transform_matrix hợp lệ
+    use_transform = False
+    transform_inv = None
+    if transform_matrix is not None:
+        try:
+            # Đảm bảo là numpy array shape (3, 3)
+            if isinstance(transform_matrix, np.ndarray) and transform_matrix.shape == (3, 3):
+                # Inverse ma trận perspective (3x3)
+                transform_inv = np.linalg.inv(transform_matrix)
+                use_transform = True
+            else:
+                print(f"⚠️  Transform matrix shape {transform_matrix.shape if isinstance(transform_matrix, np.ndarray) else 'unknown'} != (3, 3), using scale fallback")
+        except Exception as e:
+            print(f"⚠️  Error inverting transform matrix: {e}, using scale fallback")
     
     # Vẽ các chữ số giải được
     for row in range(9):
         for col in range(9):
-            digit = int(solved_grid[row, col])
+            detected_digit = int(detected_grid[row, col]) if detected_grid is not None else 0
+            solved_digit = int(solved_grid[row, col])
             
-            if digit > 0:
-                # Vị trí của ô
-                x = col * cell_size + cell_size // 2
-                y = row * cell_size + cell_size // 2
+            # Chỉ vẽ những chữ số được giải (chưa có trong detected)
+            if solved_digit > 0 and detected_digit == 0:
+                # Tọa độ trong ảnh align (64x64 mỗi ô)
+                cell_size_aligned = aligned_size / 9
+                x_aligned = (col + 0.5) * cell_size_aligned
+                y_aligned = (row + 0.5) * cell_size_aligned
                 
-                # Vẽ chữ số với font lớn, màu xanh, đậm
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 1.5
-                thickness = 3
-                color = (0, 200, 0)  # BGR - Xanh lá
+                # Map về tọa độ ảnh gốc
+                if use_transform and transform_inv is not None:
+                    # Dùng inverse perspective transformation
+                    try:
+                        # Tạo point trong homogeneous coordinates
+                        pt_aligned = np.array([[x_aligned, y_aligned, 1.0]], dtype=np.float32).T
+                        
+                        # Apply inverse transform: pt_original = inv(M) @ pt_aligned
+                        pt_original_homo = transform_inv @ pt_aligned
+                        
+                        # Chia cho coordinate thứ 3 để normalize (perspective division)
+                        x = int(pt_original_homo[0, 0] / pt_original_homo[2, 0])
+                        y = int(pt_original_homo[1, 0] / pt_original_homo[2, 0])
+                    except Exception as e:
+                        print(f"⚠️  Error applying transform: {e}")
+                        # Fallback: scale theo tỉ lệ
+                        scale_x = w / aligned_size
+                        scale_y = h / aligned_size
+                        x = int(x_aligned * scale_x)
+                        y = int(y_aligned * scale_y)
+                else:
+                    # Fallback: scale theo tỉ lệ kích thước
+                    scale_x = w / aligned_size
+                    scale_y = h / aligned_size
+                    x = int(x_aligned * scale_x)
+                    y = int(y_aligned * scale_y)
                 
-                text = str(digit)
-                text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-                
-                # Căn giữa
-                text_x = x - text_size[0] // 2
-                text_y = y + text_size[1] // 2
-                
-                cv2.putText(image_copy, text, (text_x, text_y),
-                           font, font_scale, color, thickness)
+                # Kiểm tra tọa độ hợp lệ
+                if 0 <= x < w and 0 <= y < h:
+                    # Tính font size dựa trên ảnh gốc
+                    cell_w = w / 9
+                    cell_h = h / 9
+                    
+                    text = str(solved_digit)
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    font_scale = max(0.6, (cell_h / 64) * 1.2)
+                    thickness = max(2, int((cell_h / 64) * 2))
+                    
+                    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+                    
+                    # Căn giữa
+                    text_x = x - text_size[0] // 2
+                    text_y = y + text_size[1] // 2
+                    
+                    # Vẽ background tối để chữ số rõ
+                    padding = 4
+                    cv2.rectangle(
+                        image_copy,
+                        (text_x - padding, text_y - text_size[1] - padding),
+                        (text_x + text_size[0] + padding, text_y + padding),
+                        (30, 30, 30),  # Background xám đen
+                        -1
+                    )
+                    
+                    # Vẽ chữ số màu xanh lá
+                    cv2.putText(
+                        image_copy, text, (text_x, text_y),
+                        font, font_scale, (0, 255, 100), thickness
+                    )
     
     return image_copy
 
@@ -267,7 +341,13 @@ def solve_sudoku():
             }), 200
         
         # Draw results on image
-        solved_image = draw_solved_grid(image, result['solved_grid'])
+        transform_matrix = result.get('transform_matrix', None)
+        solved_image = draw_solved_grid(
+            image, 
+            result['solved_grid'], 
+            result['detected_grid'],
+            transform_matrix
+        )
         solved_image_base64 = image_to_base64(solved_image)
         
         # Prepare response

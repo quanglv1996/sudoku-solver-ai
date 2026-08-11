@@ -8,6 +8,8 @@ Flow: Ảnh gốc → Detect điểm → Align → Crop → OCR → Solve → K�
 from typing import Tuple, Optional, Dict, Any
 import numpy as np
 import cv2
+from pathlib import Path
+from datetime import datetime
 
 from point_detection import PointDetection
 from alignment import Alignment
@@ -35,7 +37,9 @@ class SudokuSolverPipeline:
         cell_size: int = 64,
         device: str = "cuda",
         use_easyocr: bool = True,
-        conf_threshold: float = 0.3
+        conf_threshold: float = 0.3,
+        save_debug: bool = False,
+        debug_dir: str = "debug_output"
     ):
         """
         Khởi tạo pipeline
@@ -47,10 +51,22 @@ class SudokuSolverPipeline:
             device: Thiết bị ("cuda" hoặc "cpu")
             use_easyocr: Sử dụng EasyOCR (default True)
             conf_threshold: Confidence threshold cho OCR (0.0-1.0)
+            save_debug: Lưu ảnh debug ở từng bước
+            debug_dir: Thư mục lưu ảnh debug
         """
         self.device = device
         self.cell_size = cell_size
         self.use_easyocr = use_easyocr
+        self.save_debug = save_debug
+        self.debug_dir = Path(debug_dir)
+        
+        # Tạo thư mục debug nếu cần
+        if self.save_debug:
+            self.debug_dir.mkdir(parents=True, exist_ok=True)
+            # Tạo subfolder cho session hiện tại
+            self.debug_session_dir = self.debug_dir / datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.debug_session_dir.mkdir(parents=True, exist_ok=True)
+            print(f"Debug images will be saved to: {self.debug_session_dir}")
         
         # Khởi tạo các component
         self.point_detector = PointDetection(
@@ -58,7 +74,10 @@ class SudokuSolverPipeline:
             device=device
         )
         self.alignment = Alignment(output_size=(cell_size * 9, cell_size * 9))
-        self.preprocessing = Preprocessing(cell_size=cell_size)
+        self.preprocessing = Preprocessing(
+            cell_size=cell_size,
+            margin=4  # 🔍 Cắt sâu vào bên trong, tránh viền (4 pixel)
+        )
         
         # Khởi tạo OCR sử dụng EasyOCR
         use_gpu = (device == "cuda")
@@ -71,6 +90,151 @@ class SudokuSolverPipeline:
         self.solver = SudokuSolver()
         
         self.verbose = True
+    
+    # =====================================================================
+    # Debug Functions
+    # =====================================================================
+    
+    def _save_debug_image(self, image: np.ndarray, step_name: str) -> None:
+        """
+        Lưu ảnh debug
+        
+        Args:
+            image: Ảnh cần lưu
+            step_name: Tên bước (e.g., "01_original", "02_corners", etc.)
+        """
+        if not self.save_debug:
+            return
+        
+        output_path = self.debug_session_dir / f"{step_name}.jpg"
+        cv2.imwrite(str(output_path), image)
+        if self.verbose:
+            print(f"  📸 Saved: {step_name}")
+    
+    def _draw_corners_on_image(self, image: np.ndarray, corners: np.ndarray) -> np.ndarray:
+        """
+        Vẽ 4 điểm corner lên ảnh
+        
+        Args:
+            image: Ảnh gốc
+            corners: Array 4x2 chứa 4 điểm [TL, TR, BR, BL]
+        
+        Returns:
+            Ảnh với các điểm được vẽ
+        """
+        img_copy = image.copy()
+        
+        # Tên các điểm
+        point_names = ['TL', 'TR', 'BR', 'BL']
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]  # BGR
+        
+        for i, (point, name, color) in enumerate(zip(corners, point_names, colors)):
+            x, y = int(point[0]), int(point[1])
+            
+            # Vẽ circle tại điểm
+            cv2.circle(img_copy, (x, y), 8, color, -1)
+            cv2.circle(img_copy, (x, y), 10, (255, 255, 255), 2)
+            
+            # Vẽ text tên điểm
+            cv2.putText(img_copy, name, (x + 15, y - 15), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 3)
+        
+        # Vẽ đường nối các điểm
+        for i in range(4):
+            p1 = tuple(map(int, corners[i]))
+            p2 = tuple(map(int, corners[(i + 1) % 4]))
+            cv2.line(img_copy, p1, p2, (0, 255, 255), 3)
+        
+        return img_copy
+    
+    def _draw_ocr_results_on_cells(
+        self, 
+        grid_cells: list,
+        detected_grid: np.ndarray
+    ) -> list:
+        """
+        Vẽ kết quả OCR lên các ô ảnh
+        
+        Args:
+            grid_cells: Danh sách 81 ô ảnh
+            detected_grid: Ma trận 9x9 chứa các chữ số OCR detected
+        
+        Returns:
+            Danh sách 81 ô ảnh với chữ số được vẽ
+        """
+        annotated_cells = []
+        
+        for idx, cell in enumerate(grid_cells):
+            row = idx // 9
+            col = idx % 9
+            digit = int(detected_grid[row, col])
+            
+            cell_copy = cell.copy()
+            
+            # Nếu là ảnh grayscale, convert sang BGR để vẽ màu
+            if len(cell_copy.shape) == 2:
+                cell_copy = cv2.cvtColor(cell_copy, cv2.COLOR_GRAY2BGR)
+            
+            # Vẽ chữ số nếu detect được
+            if digit > 0:
+                h, w = cell_copy.shape[:2]
+                
+                # Vẽ background tối để chữ số rõ ràng hơn
+                cv2.rectangle(cell_copy, (0, 0), (w, h), (0, 0, 0), -1)
+                
+                # Vẽ chữ số
+                text = str(digit)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 1.2
+                thickness = 2
+                color = (0, 255, 0)  # Green
+                
+                text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+                x = (w - text_size[0]) // 2
+                y = (h + text_size[1]) // 2
+                
+                cv2.putText(cell_copy, text, (x, y), font, font_scale, color, thickness)
+            else:
+                # Ô trống: vẽ hình vuông xám
+                h, w = cell_copy.shape[:2]
+                cv2.rectangle(cell_copy, (5, 5), (w-5, h-5), (100, 100, 100), 2)
+            
+            annotated_cells.append(cell_copy)
+        
+        return annotated_cells
+    
+    def _save_cells_grid(self, cells: list, grid_name: str) -> None:
+        """
+        Lưu 81 ô ảnh thành một ảnh 9x9 grid
+        
+        Args:
+            cells: Danh sách 81 ô ảnh
+            grid_name: Tên file (e.g., "04_ocr_cells")
+        """
+        if not self.save_debug:
+            return
+        
+        # Tạo grid 9x9
+        cell_h, cell_w = cells[0].shape[:2]
+        grid_img = np.zeros((cell_h * 9, cell_w * 9, 3), dtype=np.uint8)
+        
+        for idx, cell in enumerate(cells):
+            row = idx // 9
+            col = idx % 9
+            
+            # Convert grayscale to BGR nếu cần
+            if len(cell.shape) == 2:
+                cell = cv2.cvtColor(cell, cv2.COLOR_GRAY2BGR)
+            
+            grid_img[
+                row * cell_h:(row + 1) * cell_h,
+                col * cell_w:(col + 1) * cell_w
+            ] = cell
+        
+        output_path = self.debug_session_dir / f"{grid_name}.jpg"
+        cv2.imwrite(str(output_path), grid_img)
+        if self.verbose:
+            print(f"  📸 Saved: {grid_name}")
     
     def run(self, image: np.ndarray) -> Dict[str, Any]:
         """
@@ -110,6 +274,13 @@ class SudokuSolverPipeline:
             if self.verbose:
                 print(f"  ✓ Found 4 corners: TL, TR, BR, BL")
             
+            # Lưu ảnh gốc
+            self._save_debug_image(image, "01_original_image")
+            
+            # Lưu ảnh với corners được vẽ
+            corners_img = self._draw_corners_on_image(image, corners)
+            self._save_debug_image(corners_img, "02_detected_corners")
+            
             # Step 2: Align ảnh
             if self.verbose:
                 print("Step 2: Aligning image...")
@@ -121,6 +292,9 @@ class SudokuSolverPipeline:
             
             if self.verbose:
                 print(f"  ✓ Image aligned to {self.cell_size*9}x{self.cell_size*9}")
+            
+            # Lưu ảnh sau align
+            self._save_debug_image(aligned_image, "03_aligned_image")
             
             # Step 3: Crop ảnh thành 9x9 ô
             if self.verbose:
@@ -134,6 +308,9 @@ class SudokuSolverPipeline:
             if self.verbose:
                 print(f"  ✓ Extracted 81 cells ({len(grid_cells)} cells)")
             
+            # Lưu grid cells (raw)
+            self._save_cells_grid(grid_cells, "04_cropped_cells_raw")
+            
             # Step 4: Nhận diện chữ số
             if self.verbose:
                 print("Step 4: Recognizing digits (OCR)...")
@@ -145,6 +322,10 @@ class SudokuSolverPipeline:
             if self.verbose:
                 print(f"  ✓ Recognized digits")
                 self._print_grid("Detected digits", detected_grid)
+            
+            # Lưu cells với OCR results được vẽ
+            ocr_cells = self._draw_ocr_results_on_cells(grid_cells, detected_grid)
+            self._save_cells_grid(ocr_cells, "05_ocr_results_drawn")
             
             # Step 5: Giải sudoku
             if self.verbose:
