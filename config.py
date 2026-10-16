@@ -2,162 +2,116 @@
 config.py
 
 Configuration file for Sudoku Solver Web Application
-Tập tin cấu hình cho ứng dụng web Sudoku Solver
+Mọi giá trị đều có thể ghi đè bằng biến môi trường (hoặc file .env)
 """
 
 import os
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).parent
+
+
+def _load_dotenv(path: Path) -> None:
+    """Đọc .env đơn giản (KEY=VALUE), không ghi đè biến môi trường đã có"""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv(PROJECT_ROOT / ".env")
+
+
+def _bool(name: str, default: bool) -> bool:
+    return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "on")
+
+
 # =====================================================================
-# Project Paths
+# Paths
 # =====================================================================
 
-PROJECT_ROOT = Path(__file__).parent
 BACKEND_DIR = PROJECT_ROOT / "backend"
 STATIC_DIR = PROJECT_ROOT / "static"
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
-UPLOADS_DIR = PROJECT_ROOT / "uploads"
-
-# Create uploads directory if not exists
-UPLOADS_DIR.mkdir(exist_ok=True)
+CERT_DIR = PROJECT_ROOT / "certs"
+DEBUG_DIR = PROJECT_ROOT / os.environ.get("DEBUG_DIR", "debug_output")
 
 # =====================================================================
-# Server Configuration
+# Server
 # =====================================================================
 
-# Flask
-FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
-FLASK_DEBUG = FLASK_ENV == 'development'
-SERVER_HOST = os.environ.get('SERVER_HOST', '0.0.0.0')
-SERVER_PORT = int(os.environ.get('SERVER_PORT', 5000))
-
-# CORS
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
+SERVER_HOST = os.environ.get("SERVER_HOST", "0.0.0.0")
+HTTP_PORT = int(os.environ.get("HTTP_PORT", os.environ.get("SERVER_PORT", 5000)))
+# HTTPS bắt buộc để trình duyệt điện thoại cho phép mở camera (getUserMedia)
+HTTPS_ENABLED = _bool("HTTPS_ENABLED", True)
+HTTPS_PORT = int(os.environ.get("HTTPS_PORT", 5443))
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
 
 # =====================================================================
-# Model Configuration
+# Models
 # =====================================================================
 
-# Point Detection Model (YOLO)
-POINT_MODEL = os.environ.get(
-    'POINT_MODEL_PATH',
-    str(BACKEND_DIR / "weights" / "best.pt")
-)
+POINT_MODEL = Path(os.environ.get("POINT_MODEL_PATH", BACKEND_DIR / "weights" / "best.pt"))
+if not POINT_MODEL.is_absolute():
+    POINT_MODEL = PROJECT_ROOT / POINT_MODEL
+POINT_CONF = float(os.environ.get("POINT_CONF", 0.25))
 
-# Device (cuda/cpu)
-DEVICE = os.environ.get('DEVICE', 'cpu')
+# auto | cuda | cpu
+DEVICE = os.environ.get("DEVICE", "auto")
 
-# =====================================================================
-# OCR Configuration
-# =====================================================================
-
-# EasyOCR Settings
-OCR_LANG = os.environ.get('OCR_LANG', 'en')
-OCR_GPU = os.environ.get('OCR_GPU', 'false').lower() == 'true'
-OCR_CONF_THRESHOLD = float(os.environ.get('OCR_CONF_THRESHOLD', 0.3))
+OCR_MODEL_NAME = os.environ.get("OCR_MODEL_NAME", "PP-OCRv6_medium_rec")
+OCR_CONF_THRESHOLD = float(os.environ.get("OCR_CONF_THRESHOLD", 0.5))
+CELL_SIZE = int(os.environ.get("CELL_SIZE", 64))
 
 # =====================================================================
-# File Upload Configuration
+# Queue manager
 # =====================================================================
 
-# Max file size (bytes)
-MAX_FILE_SIZE = int(os.environ.get('MAX_FILE_SIZE', 10 * 1024 * 1024))  # 10MB
-
-# Allowed extensions
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-
-# Image resize max size (pixels)
-MAX_IMAGE_SIZE = int(os.environ.get('MAX_IMAGE_SIZE', 800))
+MAX_QUEUE = int(os.environ.get("MAX_QUEUE", 32))
+JOB_TTL = float(os.environ.get("JOB_TTL", 600))
+REALTIME_TIMEOUT = float(os.environ.get("REALTIME_TIMEOUT", 5))
+# /api/solve (đồng bộ): chờ tối đa N giây, gồm cả thời gian tải model lúc khởi động
+SYNC_TIMEOUT = float(os.environ.get("SYNC_TIMEOUT", 120))
 
 # =====================================================================
-# Pipeline Configuration
+# Upload
 # =====================================================================
 
-# Cell size for preprocessing
-CELL_SIZE = int(os.environ.get('CELL_SIZE', 64))
-
-# Verbose logging
-VERBOSE = os.environ.get('VERBOSE', 'false').lower() == 'true'
+MAX_FILE_SIZE = int(os.environ.get("MAX_FILE_SIZE", 15 * 1024 * 1024))
+MAX_IMAGE_SIZE = int(os.environ.get("MAX_IMAGE_SIZE", 1280))
+REALTIME_MAX_SIZE = int(os.environ.get("REALTIME_MAX_SIZE", 800))
 
 # =====================================================================
-# Timeout Configuration
+# Screen auto-solve (điều khiển chuột/bàn phím của máy chạy server)
 # =====================================================================
 
-# Request timeout (seconds)
-REQUEST_TIMEOUT = int(os.environ.get('REQUEST_TIMEOUT', 60))
-
-# Processing timeout (seconds)
-PROCESSING_TIMEOUT = int(os.environ.get('PROCESSING_TIMEOUT', 120))
+SCREEN_CONTROL = _bool("SCREEN_CONTROL", True)
+# True: chỉ cho phép kích hoạt từ chính máy chạy server
+SCREEN_LOCAL_ONLY = _bool("SCREEN_LOCAL_ONLY", False)
 
 # =====================================================================
-# Logging Configuration
+# Misc
 # =====================================================================
 
-# Log level
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+SAVE_DEBUG = _bool("SAVE_DEBUG", False)
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
-# Log file
-LOG_FILE = os.environ.get('LOG_FILE', 'sudoku_solver.log')
-
-# =====================================================================
-# Feature Flags
-# =====================================================================
-
-# Enable debug mode
-DEBUG_MODE = FLASK_DEBUG
-
-# Enable result caching
-CACHE_RESULTS = os.environ.get('CACHE_RESULTS', 'false').lower() == 'true'
-
-# Enable result download
-ENABLE_DOWNLOAD = os.environ.get('ENABLE_DOWNLOAD', 'true').lower() == 'true'
-
-# =====================================================================
-# Display Configuration
-# =====================================================================
-
-# UI Theme (dark/light)
-UI_THEME = os.environ.get('UI_THEME', 'dark')
-
-# Page title
-PAGE_TITLE = os.environ.get('PAGE_TITLE', 'Sudoku Solver AI - High Tech')
-
-# Page subtitle
-PAGE_SUBTITLE = os.environ.get('PAGE_SUBTITLE', 'Upload a sudoku image, let AI solve it instantly')
-
-# =====================================================================
-# Utility Functions
-# =====================================================================
 
 def get_config_summary():
-    """Get summary of current configuration"""
     return {
-        'server': {
-            'host': SERVER_HOST,
-            'port': SERVER_PORT,
-            'debug': FLASK_DEBUG
-        },
-        'model': {
-            'point_detection': POINT_MODEL,
-            'device': DEVICE
-        },
-        'ocr': {
-            'language': OCR_LANG,
-            'use_gpu': OCR_GPU,
-            'confidence': OCR_CONF_THRESHOLD
-        },
-        'upload': {
-            'max_size_mb': MAX_FILE_SIZE / (1024 * 1024),
-            'max_image_size': MAX_IMAGE_SIZE,
-            'allowed_extensions': list(ALLOWED_EXTENSIONS)
-        },
-        'pipeline': {
-            'cell_size': CELL_SIZE,
-            'verbose': VERBOSE
-        }
+        "server": {"host": SERVER_HOST, "http_port": HTTP_PORT,
+                   "https": HTTPS_ENABLED, "https_port": HTTPS_PORT},
+        "model": {"point_detection": str(POINT_MODEL), "device": DEVICE,
+                  "ocr_model": OCR_MODEL_NAME, "ocr_conf": OCR_CONF_THRESHOLD},
+        "queue": {"max_queue": MAX_QUEUE, "job_ttl": JOB_TTL},
+        "screen": {"enabled": SCREEN_CONTROL, "local_only": SCREEN_LOCAL_ONLY},
     }
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import json
-    config = get_config_summary()
-    print(json.dumps(config, indent=2))
+    print(json.dumps(get_config_summary(), indent=2))

@@ -1,20 +1,27 @@
-# requirements.txt - Dependencies for Sudoku Solver Web Application
+# Sudoku Solver AI - dependencies (đã kiểm thử với Python 3.10, conda env yolo11_paddle)
+#
+# GPU (khuyến nghị, CUDA 11.8):
+#   pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cu118
+#   pip install paddlepaddle-gpu==3.2.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
+# CPU: thay 2 dòng trên bằng `pip install torch torchvision paddlepaddle==3.2.0`
 
-# Flask and Web
-Flask==2.3.0
-Flask-CORS==4.0.0
-Werkzeug==2.3.0
+# Web server
+Flask==3.1.3
+flask-cors==6.0.5
 
-# Computer Vision
-opencv-python==4.8.0.76
-numpy==1.24.0
+# Vision / AI
+numpy==2.2.6
+opencv-python==4.10.0.84
+ultralytics==8.4.118
+paddleocr==3.7.0
+paddlex==3.7.2
+torch==2.7.1
+torchvision==0.22.1
+paddlepaddle-gpu==3.2.0
 
-# Deep Learning
-torch==2.0.0
-ultralytics==8.0.0  # YOLO for point detection
+# HTTPS tự ký cho điện thoại (camera cần HTTPS)
+cryptography>=42
 
-# OCR
-easyocr==1.7.2
-
-# Utilities
-python-dotenv==1.0.0
+# Chế độ "Màn hình PC": chụp màn hình + tự điền
+mss>=9.0
+pyautogui>=0.9.54

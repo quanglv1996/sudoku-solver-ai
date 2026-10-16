@@ -9,6 +9,8 @@ import cv2
 import numpy as np
 from typing import Tuple
 
+from grid_geometry import order_corners
+
 
 class Alignment:
     """
@@ -77,36 +79,9 @@ class Alignment:
     
     @staticmethod
     def _sort_points(points: np.ndarray) -> np.ndarray:
-        """
-        Sắp xếp 4 điểm thành [TL, TR, BR, BL]
-        
-        TL ---- TR
-        |        |
-        BL ---- BR
-        
-        Args:
-            points: Array 4 điểm (4, 2)
-        
-        Returns:
-            Sorted points (4, 2)
-        """
-        center = np.mean(points, axis=0)
-        
-        # Chia trái phải
-        left = points[points[:, 0] < center[0]]
-        right = points[points[:, 0] >= center[0]]
-        
-        if len(left) < 2 or len(right) < 2:
-            return points
-        
-        # Sắp xếp từng bên theo chiều Y
-        tl = left[np.argmin(left[:, 1])]
-        bl = left[np.argmax(left[:, 1])]
-        tr = right[np.argmin(right[:, 1])]
-        br = right[np.argmax(right[:, 1])]
-        
-        return np.array([tl, tr, br, bl], dtype=np.float32)
-    
+        """Sắp xếp 4 điểm thành [TL, TR, BR, BL]"""
+        return order_corners(points)
+
     def set_output_size(self, size: Tuple[int, int]) -> None:
         """Đặt kích thước output"""
         self.output_size = size

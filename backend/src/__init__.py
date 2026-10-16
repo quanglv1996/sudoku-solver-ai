@@ -2,20 +2,24 @@
 __init__.py
 
 Backend module: Sudoku Solver AI
-Sử dụng EasyOCR cho OCR digit recognition
+YOLO (corner detection) + PaddleOCR (digit recognition) + bitmask solver
 """
 
-from .alignment import Alignment
-from .preprocessing import Preprocessing, PreprocessingResult
-from .ocr_digit import OCRDigit, OCRResult, ImagePreprocessor, GridExtractor
-from .sudoku_solver import SudokuSolver, SudokuValidator
-from .point_detection import PointDetection
-from .pipeline import SudokuSolverPipeline
+import sys
+from pathlib import Path
+
+# Các module trong thư mục này import lẫn nhau bằng tên tuyệt đối
+sys.path.insert(0, str(Path(__file__).parent))
+
+from alignment import Alignment  # noqa: E402
+from ocr_digit import OCRDigit, OCRResult, ImagePreprocessor, GridExtractor  # noqa: E402
+from sudoku_solver import SudokuSolver, SudokuValidator  # noqa: E402
+from point_detection import PointDetection  # noqa: E402
+from pipeline import SudokuSolverPipeline  # noqa: E402
+from task_manager import TaskManager, Job, JobStatus, Priority  # noqa: E402
 
 __all__ = [
     "Alignment",
-    "Preprocessing",
-    "PreprocessingResult",
     "OCRDigit",
     "OCRResult",
     "ImagePreprocessor",
@@ -24,4 +28,8 @@ __all__ = [
     "SudokuValidator",
     "PointDetection",
     "SudokuSolverPipeline",
+    "TaskManager",
+    "Job",
+    "JobStatus",
+    "Priority",
 ]

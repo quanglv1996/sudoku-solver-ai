@@ -1,547 +1,112 @@
-"""
-README.md
+# 🧩 Sudoku Vision AI
 
-Sudoku Solver AI - Complete Web Application
-Ứng dụng Web Sudoku Solver AI - Hoàn Chỉnh
-"""
+Giải sudoku từ camera/ảnh/màn hình bằng YOLO (dò 4 góc lưới) + PaddleOCR (đọc số) + solver bitmask.
+Truy cập qua trình duyệt trên máy tính hoặc điện thoại (cùng Wi-Fi).
 
-# 🧩 Sudoku Solver AI
+## Ba chế độ
 
-> A high-tech web application to solve sudoku puzzles from images using AI and computer vision.
+| Chế độ | Mô tả |
+|---|---|
+| 📷 **Chụp & Giải** | Chụp bằng camera (hoặc tải ảnh / kéo-thả / Ctrl+V). Giao diện "quét" hiển thị từng bước thật của server: dò khung → căn chỉnh → đọc số → giải, rồi chữ số lời giải hiện lên đúng phối cảnh trên ảnh gốc. |
+| 🎥 **Realtime** | Chỉ cần quay camera: lời giải được vẽ thẳng lên hình và bám theo lưới khi di chuyển (~12 fps, ~50ms/frame trên GPU). |
+| 🖥️ **Màn hình PC** | Chụp màn hình máy chạy server, tìm lưới sudoku trên trang web, giải và **tự click + gõ số** vào từng ô trống. Có thể kích hoạt từ điện thoại. |
 
-**Status**: ✅ Complete & Production Ready
+## Chạy
 
----
-
-## 🎯 Overview
-
-Upload a sudoku puzzle image. Our AI will:
-1. 📸 Detect the puzzle corners
-2. 📐 Align the image
-3. 🔍 Extract individual cells
-4. 🤖 Recognize digits with OCR
-5. 🧩 Solve the puzzle
-6. 🎨 Display the solution on your image
-
-**All in 8-30 seconds!** ⚡
-
----
-
-## ✨ Features
-
-- 📸 **Drag & Drop Upload** - Simple image upload interface
-- 🎯 **YOLO Detection** - Accurate corner detection
-- 🤖 **EasyOCR** - Digit recognition
-- 🧩 **Smart Solver** - Backtracking algorithm
-- 🎨 **High-Tech UI** - Modern cyberpunk design
-- 📊 **Statistics** - Difficulty level and solved status
-- 📱 **Responsive** - Works on all devices
-- ⚡ **Fast** - 3-30 seconds processing
-- 📡 **REST API** - Easy integration
-- 📚 **Well Documented** - Multiple guides included
-
----
-
-## 🚀 Quick Start
-
-### 1️⃣ Install
 ```bash
+conda activate yolo11_paddle        # Python 3.10
 pip install -r requirements.txt
+python run_web.py
 ```
 
-### 2️⃣ Run
+Server in ra địa chỉ truy cập:
+
+- Máy tính: `http://localhost:5000`
+- Điện thoại: `https://<IP-LAN>:5443` — trình duyệt điện thoại **chỉ cho mở camera qua HTTPS**, nên server tự sinh chứng chỉ tự ký (thư mục `certs/`). Lần đầu mở, chọn *Nâng cao → Tiếp tục*.
+
+Model được tải nền khi khởi động (~10–15s); trạng thái hiện ở góc trên giao diện.
+
+## Kiến trúc: Manager + Queue
+
+```
+Browser / Phone ──HTTP──▶ Flask (nhiều thread: chỉ nhận/trả dữ liệu)
+                              │ submit()
+                              ▼
+                     TaskManager (PriorityQueue)
+                     ưu tiên: realtime > screen > photo
+                              │
+                              ▼
+               1 worker thread sở hữu SudokuEngine (YOLO + PaddleOCR trên GPU)
+```
+
+- Model không thread-safe → chỉ 1 worker giữ model, xử lý tuần tự; HTTP thread không bao giờ chạm vào model.
+- **Realtime "latest wins"**: mỗi session chỉ giữ frame mới nhất đang chờ, frame cũ bị bỏ → không dồn độ trễ. Client luôn chỉ có 1 request đang bay nên tự điều tiết theo tốc độ server.
+- **RealtimeTracker**: OCR + giải chỉ chạy khi gặp đề mới; các frame sau chỉ dò góc + so mẫu ô trống, dùng lại lời giải đã cache.
+- Job lưu `stage` (detect/align/ocr/solve/render/fill) → frontend hiển thị tiến độ thật; hỗ trợ huỷ, giới hạn hàng đợi, tự dọn job cũ.
+
+### API
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/api/health` | Trạng thái engine, thiết bị, hàng đợi, URL truy cập |
+| POST | `/api/jobs` | `multipart image` → job ảnh (202) |
+| GET | `/api/jobs/<id>?wait=ms` | Tiến độ/kết quả (long-poll tới khi đổi stage) |
+| DELETE | `/api/jobs/<id>` | Huỷ job |
+| POST | `/api/realtime` | `multipart frame, session` → overlay (góc lưới + chữ số từng ô) |
+| GET | `/api/screen/monitors` | Danh sách màn hình |
+| POST | `/api/screen` | `{monitor, fill, type_delay}` → job tự giải màn hình (202) |
+
+## Cấu trúc
+
+```
+app.py                  Flask routes + chạy HTTP/HTTPS song song
+config.py               Cấu hình (biến môi trường / .env)
+run_web.py              Kiểm tra môi trường rồi chạy
+backend/src/
+  task_manager.py       Hàng đợi ưu tiên + worker + trạng thái job
+  engine.py             SudokuEngine + handler cho từng loại job
+  pipeline.py           Detect → Align → OCR → Solve → overlay/render
+  point_detection.py    YOLO dò 4 góc (chọn tứ giác hợp lệ tốt nhất)
+  grid_geometry.py      Sắp xếp góc, kiểm tra tứ giác, dò lưới bằng contour
+  ocr_digit.py          Phân tích ô trống + PaddleOCR TextRecognition
+  sudoku_solver.py      Solver bitmask + MRV, phát hiện số trùng
+  realtime.py           Tracker có cache cho chế độ realtime
+  screen_solver.py      Chụp màn hình (mss) + tự điền (pyautogui)
+  tls.py                Chứng chỉ HTTPS tự ký cho LAN
+backend/weights/best.pt Model YOLO dò 4 góc
+static/js/              main.js, photo.js, live.js, screen.js, common.js (ES modules)
+tests/                  pytest (test_core.py nhanh, test_integration.py dùng model thật)
+tools/convert_seg2det.py  Chuyển nhãn segmentation 4 điểm → 4 box YOLO detection (huấn luyện model góc)
+imgs/test.jpg           Ảnh mẫu dùng trong test
+```
+
+## Cấu hình chính (`.env`)
+
+| Biến | Mặc định | Ý nghĩa |
+|---|---|---|
+| `DEVICE` | `auto` | `cuda` / `cpu` / `auto` |
+| `HTTP_PORT` / `HTTPS_PORT` | `5000` / `5443` | Cổng |
+| `HTTPS_ENABLED` | `true` | Bật HTTPS cho điện thoại |
+| `OCR_MODEL_NAME` | `PP-OCRv6_medium_rec` | Model nhận dạng của PaddleOCR |
+| `OCR_CONF_THRESHOLD` | `0.5` | Ngưỡng tin cậy chữ số |
+| `SCREEN_CONTROL` | `true` | Cho phép chế độ Màn hình PC |
+| `SCREEN_LOCAL_ONLY` | `false` | Chỉ cho kích hoạt từ chính máy server |
+| `SAVE_DEBUG` | `false` | Lưu ảnh từng bước vào `debug_output/` |
+
+## Kiểm thử
+
 ```bash
-python app.py
+pytest tests -v                  # toàn bộ (load model thật, ~30s trên GPU)
+pytest tests -v -m "not model"   # chỉ test nhanh: solver, hình học, TaskManager
 ```
 
-### 3️⃣ Open
-```
-http://localhost:5000
-```
+- `tests/test_core.py`: solver (đề khó, đề mâu thuẫn, đề vô nghiệm), sắp xếp góc, dò lưới contour, dark mode, TaskManager (ưu tiên, latest-wins, huỷ, hàng đợi đầy, lỗi tải model).
+- `tests/test_integration.py`: ảnh chụp biến dạng (xoay ±35°, nghiêng, tối/sáng, mờ, nhiễu, nén JPEG, chụp xa), ảnh màn hình (dark mode, tô sáng, ghi chú bút chì, nhiều cỡ lưới) kèm kiểm tra toạ độ click, realtime tracker, toàn bộ HTTP API và 6 client đồng thời.
 
-### 4️⃣ Upload & Solve
-- Drag sudoku image
-- Click "Solve"
-- View results!
+Pipeline "xác minh bằng cách giải": nếu khung lưới đầu tiên cho ra đề không giải được, hệ thống thử ứng viên tiếp theo (YOLO → contour → YOLO trên ảnh xoay).
 
-**That's it!** 🎉
+## Lưu ý chế độ Màn hình PC
 
----
-
-## 📋 System Requirements
-
-- **Python**: 3.8+
-- **RAM**: 4GB+ (8GB recommended)
-- **Disk**: 2GB+
-- **GPU**: Optional (CUDA for faster processing)
-- **OS**: Windows, macOS, or Linux
-
----
-
-## 📁 Project Structure
-
-```
-sudoku-solver-ai/
-├── backend/                 # AI/ML Pipeline
-│   ├── src/                # Core modules
-│   └── weights/            # ML models
-├── static/                 # Frontend assets
-│   ├── css/               # Styling
-│   └── js/                # JavaScript
-├── templates/             # HTML pages
-├── app.py                 # Flask server
-├── config.py              # Configuration
-└── requirements.txt       # Dependencies
-```
-
----
-
-## 🎨 Technology Stack
-
-### Backend
-- **Python 3.8+** - Core language
-- **Flask 2.3** - Web framework
-- **OpenCV** - Image processing
-- **EasyOCR** - Digit recognition
-- **YOLO** - Corner detection
-- **NumPy** - Numerical computing
-
-### Frontend
-- **HTML5** - Structure
-- **CSS3** - Styling & animations
-- **JavaScript ES6+** - Interactivity
-
-### Deployment
-- Python virtual environment
-- Flask development/production server
-- Optional: Gunicorn, Docker, Cloud platforms
-
----
-
-## 🎯 How It Works
-
-### Image Processing Pipeline
-
-```
-Input Image
-    ↓
-[YOLO] Corner Detection
-    ↓
-[Alignment] Perspective Transform
-    ↓
-[Preprocessing] Extract 9×9 Cells
-    ↓
-[EasyOCR] Digit Recognition
-    ↓
-[Solver] Backtracking Algorithm
-    ↓
-Output: Solved Sudoku
-```
-
-### User Flow
-
-```
-1. Open http://localhost:5000
-2. Upload sudoku image (drag & drop)
-3. Click "⚡ Solve Sudoku"
-4. Wait for processing (animations show progress)
-5. View results:
-   - Original image with overlay
-   - Statistics (difficulty, status)
-   - Both detected and solved grids
-6. Try another image!
-```
-
----
-
-## 📊 Performance
-
-### Speed (Times)
-| Component | Speed |
-|-----------|-------|
-| Page load | ~200ms |
-| Image upload | <1s |
-| Processing | 3-30s |
-| Display results | <1s |
-
-### Memory Usage
-| Component | Memory |
-|-----------|--------|
-| Browser | ~50MB |
-| Backend | ~500MB |
-| Models | ~150MB |
-
----
-
-## 🎨 UI Design
-
-### Colors (Cyberpunk Aesthetic)
-- **Primary**: Cyan (#00d4ff)
-- **Secondary**: Neon Green (#00ff88)
-- **Accent**: Hot Pink (#ff006e)
-- **Background**: Dark Navy (#0a0e27)
-
-### Animations (10 total)
-- Floating particles
-- Glitch text effect
-- Loading spinner
-- Progress bar
-- Cell appearance
-- Image fade-in
-- Button shimmer
-- And more!
-
-### Responsive
-- Desktop: Full-featured
-- Tablet: Optimized layout
-- Mobile: Touch-friendly
-
----
-
-## 📡 API Endpoints
-
-### `POST /api/solve`
-Solve a sudoku from image upload
-
-**Request**:
-```
-Content-Type: multipart/form-data
-File: image.jpg
-```
-
-**Response** (200):
-```json
-{
-  "success": true,
-  "message": "Sudoku solved successfully!",
-  "original_image": "data:image/jpeg;base64,...",
-  "solved_image": "data:image/jpeg;base64,...",
-  "detected_grid": [[1,0,3,...], ...],
-  "solved_grid": [[1,4,3,...], ...],
-  "steps": {...},
-  "difficulty": 42
-}
-```
-
-### `GET /api/health`
-Health check endpoint
-
-**Response** (200):
-```json
-{
-  "status": "ok",
-  "pipeline_loaded": true,
-  "timestamp": "2026-08-10T10:30:00"
-}
-```
-
----
-
-## 🔧 Configuration
-
-All settings in `config.py` and `.env`:
-
-```python
-# Server
-SERVER_HOST = '0.0.0.0'
-SERVER_PORT = 5000
-
-# Models
-DEVICE = 'cpu'  # or 'cuda' for GPU
-
-# Upload
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-
-# OCR
-OCR_LANG = 'en'
-OCR_CONF_THRESHOLD = 0.3
-```
-
-See `.env.example` for all options.
-
----
-
-## 📚 Documentation
-
-Comprehensive documentation included:
-
-| Document | Purpose |
-|----------|---------|
-| [SETUP.md](SETUP.md) | Complete installation guide |
-| [README_WEB.md](README_WEB.md) | Web app overview |
-| [WEB_UI_GUIDE.md](WEB_UI_GUIDE.md) | UI detailed guide |
-| [INDEX.md](INDEX.md) | Navigation & index |
-| [PROJECT_COMPLETION_SUMMARY.md](PROJECT_COMPLETION_SUMMARY.md) | Project overview |
-
-**Start with [SETUP.md](SETUP.md) for installation instructions.**
-
----
-
-## 🐛 Troubleshooting
-
-### "Connection refused"
-- Flask not running
-- Run: `python app.py`
-
-### "Model not found"
-- Download YOLO model
-- Place in: `backend/weights/best.pt`
-- See [SETUP.md](SETUP.md)
-
-### "Port already in use"
-- Use different port: `python app.py --port 5001`
-
-### "Memory error"
-- Reduce image size: `MAX_IMAGE_SIZE = 600` in config.py
-- Close other applications
-
-**See [README_WEB.md](README_WEB.md) for more troubleshooting.**
-
----
-
-## 📦 What's Included
-
-### Source Code (12 files)
-- ✅ Python backend (8 modules)
-- ✅ Flask API
-- ✅ HTML/CSS/JavaScript frontend
-
-### Documentation (7 files)
-- ✅ Setup guide
-- ✅ Usage guides
-- ✅ API reference
-- ✅ Project summary
-
-### Utilities (4 files)
-- ✅ Python startup script
-- ✅ Windows batch file
-- ✅ Linux/Mac shell script
-- ✅ Configuration system
-
-### Configuration
-- ✅ Requirements.txt
-- ✅ .env template
-- ✅ config.py
-
-**Total: 20+ files, 5000+ lines of code**
-
----
-
-## 🎓 Code Examples
-
-### Backend Usage
-```python
-from backend.src.pipeline import SudokuSolverPipeline
-
-# Initialize
-pipeline = SudokuSolverPipeline(
-    point_detection_model='backend/weights/best.pt',
-    device='cpu'
-)
-
-# Run
-result = pipeline.run(image)
-print(result['solved_grid'])
-```
-
-### Frontend Integration
-```javascript
-// Upload and solve
-const formData = new FormData();
-formData.append('image', imageFile);
-
-fetch('/api/solve', {
-    method: 'POST',
-    body: formData
-})
-.then(r => r.json())
-.then(data => {
-    console.log('Solved!', data.solved_grid);
-});
-```
-
----
-
-## 🚀 Deployment
-
-### Local
-```bash
-python app.py
-```
-
-### Production
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
-
-### Docker
-```bash
-docker build -t sudoku-solver .
-docker run -p 5000:5000 sudoku-solver
-```
-
-### Cloud
-- Heroku
-- AWS
-- Google Cloud
-- Azure
-- etc.
-
-**See [SETUP.md](SETUP.md) for detailed deployment guide.**
-
----
-
-## 🔒 Security
-
-**Implemented**:
-- ✅ File type validation
-- ✅ File size limits
-- ✅ Input sanitization
-- ✅ CORS configuration
-
-**For production, add**:
-- Authentication
-- HTTPS/SSL
-- Rate limiting
-- CSRF protection
-
----
-
-## 🌟 Key Features
-
-### Complete Pipeline
-From raw image to solved sudoku in one API call.
-
-### Modern Design
-High-tech cyberpunk UI with smooth animations.
-
-### Well Documented
-Guides for installation, usage, and development.
-
-### Production Ready
-Error handling, logging, and configuration.
-
-### Easy to Deploy
-Single Python file, no database needed.
-
-### Easy to Extend
-Clean, modular, well-commented code.
-
----
-
-## 📊 Statistics
-
-| Metric | Value |
-|--------|-------|
-| Files | 20+ |
-| Code | 5000+ lines |
-| Documentation | 2000+ lines |
-| Animations | 10 |
-| Tests | Conceptual |
-| Coverage | Full pipeline |
-
----
-
-## 🎯 Supported Formats
-
-### Image Formats
-- PNG (recommended)
-- JPG/JPEG
-- GIF
-- BMP
-
-### Image Sizes
-- Minimum: 400×400 pixels
-- Maximum: 1000×1000 pixels
-- Max file: 10MB
-
-### Sudoku Types
-- Printed
-- Digital (screenshots)
-- Handwritten (limited support)
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `Ctrl+V` | Paste image from clipboard |
-| `Enter` | Solve (when image selected) |
-
----
-
-## 🤝 Contributing
-
-Suggestions for improvements:
-- Better OCR accuracy
-- Faster solver
-- Mobile app
-- Batch processing
-- Result history
-- User authentication
-
----
-
-## 📝 License
-
-Open source - Feel free to modify and use!
-
----
-
-## 📞 Support
-
-### Documentation
-- [SETUP.md](SETUP.md) - Installation
-- [README_WEB.md](README_WEB.md) - Web app
-- [WEB_UI_GUIDE.md](WEB_UI_GUIDE.md) - UI guide
-- [INDEX.md](INDEX.md) - Navigation
-
-### Troubleshooting
-See respective documentation files.
-
----
-
-## 🎉 Get Started
-
-1. Read [SETUP.md](SETUP.md)
-2. Run `pip install -r requirements.txt`
-3. Run `python app.py`
-4. Open `http://localhost:5000`
-5. Upload sudoku image
-6. Click "Solve"
-7. Enjoy! 🧩
-
----
-
-## 🏆 Project Highlights
-
-✨ **Complete** - Full pipeline from image to solution
-✨ **Modern** - High-tech UI with animations
-✨ **Documented** - Comprehensive guides
-✨ **Production Ready** - Error handling and logging
-✨ **Easy to Deploy** - Simple startup
-✨ **Easy to Modify** - Clean code
-
----
-
-## 🚀 What's Next
-
-Optional enhancements:
-- [ ] Add user authentication
-- [ ] Implement result history
-- [ ] Add batch processing
-- [ ] Create mobile app
-- [ ] Deploy to cloud
-- [ ] Add more features
-
----
-
-**Enjoy solving sudoku! 🧩✨**
-
----
-
-**Version**: 1.0
-**Status**: ✅ Production Ready
-**Last Updated**: 2026-08-10
+- Điều khiển chuột/bàn phím của **máy chạy server**. Dừng khẩn cấp: đưa chuột vào một góc màn hình.
+- Bất kỳ ai truy cập được server trong mạng LAN đều có thể kích hoạt; đặt `SCREEN_LOCAL_ONLY=true` hoặc `SCREEN_CONTROL=false` nếu không muốn.
+- Trang sudoku phải cho phép chọn ô bằng click và nhập bằng phím số (đa số trang đều vậy). Nếu trang phản hồi chậm, chọn tốc độ điền "Vừa"/"Chậm".
