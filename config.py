@@ -50,6 +50,9 @@ HTTP_PORT = int(os.environ.get("HTTP_PORT", os.environ.get("SERVER_PORT", 5000))
 HTTPS_ENABLED = _bool("HTTPS_ENABLED", True)
 HTTPS_PORT = int(os.environ.get("HTTPS_PORT", 5443))
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
+# IP/tên máy mà điện thoại dùng để truy cập (phân tách bằng dấu phẩy). Cần khi chạy
+# trong Docker: IP tự dò được là IP nội bộ của container, không truy cập được từ LAN
+PUBLIC_HOSTS = [h.strip() for h in os.environ.get("PUBLIC_HOSTS", "").split(",") if h.strip()]
 
 # =====================================================================
 # Models

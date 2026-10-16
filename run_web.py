@@ -35,7 +35,11 @@ def check_requirements() -> bool:
         print("   pip install -r requirements.txt")
         return False
     print("✅ Package bắt buộc: OK")
+    import config
+
     for mod, purpose in OPTIONAL.items():
+        if mod in ("mss", "pyautogui") and not config.SCREEN_CONTROL:
+            continue  # chế độ Màn hình PC đã tắt (vd. chạy trong Docker)
         if importlib.util.find_spec(mod) is None:
             print(f"⚠️  Thiếu '{mod}' → tắt {purpose}")
     return True

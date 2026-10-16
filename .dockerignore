@@ -1,0 +1,17 @@
+.git
+.gitignore
+.vscode
+.env
+**/__pycache__
+**/*.pyc
+.pytest_cache
+certs
+debug_output
+models
+*.log
+yolo11*.pt
+tests
+tools
+Dockerfile
+docker-compose.yml
+.dockerignore

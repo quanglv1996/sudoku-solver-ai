@@ -26,6 +26,22 @@ Server in ra địa chỉ truy cập:
 
 Model được tải nền khi khởi động (~10–15s); trạng thái hiện ở góc trên giao diện.
 
+## Chạy bằng Docker (GPU)
+
+Yêu cầu: driver NVIDIA trên máy host, Docker Desktop (WSL2) trên Windows hoặc Docker + NVIDIA Container Toolkit trên Linux.
+
+```bash
+# IP LAN của máy host → in đúng địa chỉ cho điện thoại và đưa vào chứng chỉ HTTPS
+echo PUBLIC_HOSTS=192.168.1.118 >> .env
+docker compose up -d --build
+docker compose logs -f
+```
+
+- Image: CUDA 12.6 + PyTorch 2.7.1 + PaddlePaddle-GPU 3.2.0 (thư viện CUDA/cuDNN cài qua pip). Đổi CUDA bằng build arg `CUDA_TAG` (`cu118`, `cu126`) và `CUDA_IMAGE`.
+- Mạng riêng `sudoku-net` (bridge, `172.28.0.0/24`, container cố định `172.28.0.10`); đổi bằng `SUDOKU_SUBNET`, `SUDOKU_GATEWAY`, `SUDOKU_IP`. Cổng 5000/5443 được publish ra máy host nên điện thoại cùng Wi-Fi truy cập được qua IP của host.
+- Volume `certs` giữ chứng chỉ HTTPS, `paddlex-cache` giữ model PaddleOCR (tải lần đầu).
+- Chế độ **Màn hình PC** bị tắt trong container (không có màn hình/chuột của máy host); muốn dùng thì chạy `python run_web.py` trực tiếp.
+
 ## Kiến trúc: Manager + Queue
 
 ```
@@ -62,6 +78,8 @@ Browser / Phone ──HTTP──▶ Flask (nhiều thread: chỉ nhận/trả d�
 app.py                  Flask routes + chạy HTTP/HTTPS song song
 config.py               Cấu hình (biến môi trường / .env)
 run_web.py              Kiểm tra môi trường rồi chạy
+Dockerfile              Image GPU (CUDA 12.6)
+docker-compose.yml      Service GPU + mạng riêng sudoku-net + volume
 backend/src/
   task_manager.py       Hàng đợi ưu tiên + worker + trạng thái job
   engine.py             SudokuEngine + handler cho từng loại job
@@ -87,6 +105,7 @@ imgs/test.jpg           Ảnh mẫu dùng trong test
 | `DEVICE` | `auto` | `cuda` / `cpu` / `auto` |
 | `HTTP_PORT` / `HTTPS_PORT` | `5000` / `5443` | Cổng |
 | `HTTPS_ENABLED` | `true` | Bật HTTPS cho điện thoại |
+| `PUBLIC_HOSTS` | (tự dò) | IP/tên máy hiển thị cho điện thoại và thêm vào cert (cần khi chạy Docker) |
 | `OCR_MODEL_NAME` | `PP-OCRv6_medium_rec` | Model nhận dạng của PaddleOCR |
 | `OCR_CONF_THRESHOLD` | `0.5` | Ngưỡng tin cậy chữ số |
 | `SCREEN_CONTROL` | `true` | Cho phép chế độ Màn hình PC |

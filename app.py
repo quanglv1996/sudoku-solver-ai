@@ -24,6 +24,7 @@ Endpoints:
 """
 
 import logging
+import os
 import sys
 import threading
 import time
@@ -97,7 +98,7 @@ def job_response(job, status_code: int = 200):
 
 
 def access_urls():
-    ips = lan_ips()
+    ips = config.PUBLIC_HOSTS or lan_ips()
     urls = {"http": [f"http://localhost:{config.HTTP_PORT}"] + [f"http://{ip}:{config.HTTP_PORT}" for ip in ips]}
     if config.HTTPS_ENABLED:
         urls["https"] = [f"https://{ip}:{config.HTTPS_PORT}" for ip in ips] or [f"https://localhost:{config.HTTPS_PORT}"]
@@ -269,7 +270,7 @@ def serve():
     servers = [make_server(config.SERVER_HOST, config.HTTP_PORT, app, threaded=True)]
     if config.HTTPS_ENABLED:
         try:
-            cert, key = ensure_certificate(config.CERT_DIR)
+            cert, key = ensure_certificate(config.CERT_DIR, config.PUBLIC_HOSTS)
             servers.append(make_server(config.SERVER_HOST, config.HTTPS_PORT, app,
                                        threaded=True, ssl_context=(cert, key)))
         except Exception as e:
@@ -285,6 +286,9 @@ def serve():
     for u in urls.get("https", []):
         print("   Điện thoại (camera, cùng Wi-Fi):", u)
     print("   (Lần đầu mở HTTPS trên điện thoại: chọn 'Nâng cao' → 'Tiếp tục' vì cert tự ký)")
+    if os.environ.get("IN_DOCKER") and not config.PUBLIC_HOSTS:
+        print("   ⚠️  Đang chạy trong Docker: IP trên là IP nội bộ của container.")
+        print("      Đặt PUBLIC_HOSTS=<IP LAN của máy host> trong .env để điện thoại truy cập đúng địa chỉ.")
     print("   Model đang tải ở nền - xem trạng thái ở góc trên giao diện")
     print("   Ctrl+C để dừng")
     print("=" * 64 + "\n")

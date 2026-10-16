@@ -1,0 +1,61 @@
+# Chạy:   docker compose up -d --build
+# Log:    docker compose logs -f
+# Dừng:   docker compose down
+#
+# Yêu cầu: driver NVIDIA trên máy host + Docker Desktop (WSL2) hoặc NVIDIA Container Toolkit (Linux).
+# Biến (đặt trong .env cạnh file này hoặc trên dòng lệnh):
+#   PUBLIC_HOSTS  IP LAN của máy host, vd. 192.168.1.118 → in đúng địa chỉ cho điện thoại và đưa vào cert HTTPS
+#   HTTP_PORT / HTTPS_PORT  cổng (mặc định 5000 / 5443)
+#   SUDOKU_SUBNET / SUDOKU_IP  dải mạng riêng và IP cố định của container
+
+name: sudoku-solver-ai
+
+services:
+  sudoku:
+    build:
+      context: .
+      args:
+        CUDA_TAG: cu126
+    image: sudoku-solver-ai:gpu
+    container_name: sudoku-solver-ai
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DEVICE: cuda
+      HTTP_PORT: ${HTTP_PORT:-5000}
+      HTTPS_PORT: ${HTTPS_PORT:-5443}
+      PUBLIC_HOSTS: ${PUBLIC_HOSTS:-}
+      # Container không có màn hình/chuột của máy host → tắt chế độ "Màn hình PC"
+      SCREEN_CONTROL: "false"
+    ports:
+      - "${HTTP_PORT:-5000}:${HTTP_PORT:-5000}"
+      - "${HTTPS_PORT:-5443}:${HTTPS_PORT:-5443}"
+    volumes:
+      - certs:/app/certs                 # giữ chứng chỉ HTTPS giữa các lần chạy
+      - paddlex-cache:/root/.paddlex     # model PaddleOCR (tải lần đầu)
+    networks:
+      sudoku-net:
+        ipv4_address: ${SUDOKU_IP:-172.28.0.10}
+    shm_size: 1gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  sudoku-net:
+    name: sudoku-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUDOKU_SUBNET:-172.28.0.0/24}
+          gateway: ${SUDOKU_GATEWAY:-172.28.0.1}
+
+volumes:
+  certs:
+  paddlex-cache:

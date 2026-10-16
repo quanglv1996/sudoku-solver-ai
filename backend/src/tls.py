@@ -10,7 +10,7 @@ import ipaddress
 import socket
 import time
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 
 _cache = {"at": 0.0, "ips": []}
@@ -37,9 +37,20 @@ def lan_ips() -> List[str]:
     return _cache["ips"]
 
 
-def ensure_certificate(cert_dir: Path) -> Tuple[str, str]:
+def _is_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
+def ensure_certificate(cert_dir: Path, extra_hosts: Sequence[str] = ()) -> Tuple[str, str]:
     """
     Tạo (hoặc dùng lại) cert/key; tạo lại nếu IP LAN thay đổi
+
+    Args:
+        extra_hosts: IP/tên máy bổ sung vào SAN (vd. IP của máy host khi chạy Docker)
 
     Returns:
         (cert_path, key_path)
@@ -51,16 +62,18 @@ def ensure_certificate(cert_dir: Path) -> Tuple[str, str]:
 
     cert_dir.mkdir(parents=True, exist_ok=True)
     cert_path, key_path = cert_dir / "cert.pem", cert_dir / "key.pem"
-    ips = ["127.0.0.1"] + lan_ips()
+    ips = sorted({"127.0.0.1", *lan_ips(), *(h for h in extra_hosts if _is_ip(h))})
+    names = sorted({"localhost", socket.gethostname(), *(h for h in extra_hosts if not _is_ip(h))})
 
     if cert_path.exists() and key_path.exists():
         try:
             cert = x509.load_pem_x509_certificate(cert_path.read_bytes())
             san = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
             existing = {str(ip) for ip in san.get_values_for_type(x509.IPAddress)}
+            existing_names = set(san.get_values_for_type(x509.DNSName))
             not_after = cert.not_valid_after_utc
             fresh = not_after > datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)
-            if set(ips) <= existing and fresh:
+            if set(ips) <= existing and set(names) <= existing_names and fresh:
                 return str(cert_path), str(key_path)
         except Exception:
             pass
@@ -69,7 +82,7 @@ def ensure_certificate(cert_dir: Path) -> Tuple[str, str]:
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Sudoku Solver AI (local)")])
     now = datetime.datetime.now(datetime.timezone.utc)
     san = x509.SubjectAlternativeName(
-        [x509.DNSName("localhost"), x509.DNSName(socket.gethostname())]
+        [x509.DNSName(n) for n in names]
         + [x509.IPAddress(ipaddress.ip_address(ip)) for ip in ips]
     )
     cert = (
